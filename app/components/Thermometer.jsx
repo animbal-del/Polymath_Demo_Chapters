@@ -31,19 +31,19 @@ export default function Thermometer({ value = 10, onChange, target = 0, label = 
     onChange(yToTemp(svgY));
   }, [onChange]);
 
-  // Badge tracks mercury: SVG is 300px tall, offset 15px inside 330px container
+  // Badge tracks mercury: SVG is 300px tall, offset 15px inside 330px container.
   const badgeTop = 15 + mercuryY - 22;
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col items-center gap-5 [@media(max-height:820px)]:gap-3">
       <div
-        className="relative flex h-[330px] w-[150px] items-center justify-center rounded-[40px] bg-white/50 shadow-card"
+        className="relative flex h-[330px] w-[150px] items-center justify-center rounded-[40px] bg-white/50 shadow-card [@media(max-height:820px)]:h-[294px] [@media(max-height:820px)]:w-[140px] [@media(max-height:820px)]:rounded-[34px]"
         style={{ cursor: "ns-resize" }}
       >
         <svg
           ref={svgRef}
           viewBox={`0 0 120 ${SVG_H}`}
-          className="h-[300px] w-[120px] select-none"
+          className="h-[300px] w-[120px] select-none [@media(max-height:820px)]:h-[270px] [@media(max-height:820px)]:w-[112px]"
           style={{ touchAction: "none" }}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);

@@ -514,7 +514,7 @@ export default function Galaxy(){
 
       {/* Top bar */}
       <div className="relative border-b border-line bg-cream/80 backdrop-blur">
-        <div className="flex h-[74px] items-center justify-between px-7">
+        <div className="flex h-[74px] items-center justify-between px-7 [@media(max-height:820px)]:h-16 [@media(max-height:820px)]:px-5">
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-body hover:text-ink transition">
             <ArrowLeft size={16}/> Library
           </Link>
@@ -526,7 +526,7 @@ export default function Galaxy(){
             <AnimatePresence>
               {streak>=2&&(
                 <motion.span key={`s${streak}`} initial={{scale:0}} animate={{scale:1}} exit={{scale:0}}
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-black text-white"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black text-white"
                   style={{background:"#E07A20",boxShadow:"0 0 10px rgba(224,122,32,0.4)"}}>
                   🔥 {streak}
                 </motion.span>
@@ -536,7 +536,7 @@ export default function Galaxy(){
             <AnimatePresence>
               {narrating&&audioStatus!=="idle"&&(
                 <motion.div initial={{opacity:0,scale:0.85}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.85}}
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold"
                   style={{
                     background:audioStatus==="loading"?"rgba(251,191,36,0.10)":"rgba(66,196,106,0.10)",
                     borderColor:audioStatus==="loading"?"rgba(251,191,36,0.40)":"rgba(66,196,106,0.40)",
@@ -555,15 +555,15 @@ export default function Galaxy(){
               )}
             </AnimatePresence>
             <motion.span key={xp} initial={{scale:1.35}} animate={{scale:1}} transition={{type:"spring",stiffness:400,damping:18}}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-black"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-black"
               style={{background:P.warmBg,border:`1px solid ${P.warmBorder}`,color:"#C47D0A"}}>
               <Zap size={16}/> {xp} XP
             </motion.span>
-            <button onClick={resetLesson} className="rounded-full bg-cream p-3 shadow-soft border border-line"><RotateCcw size={16} className="text-body"/></button>
+            <button onClick={resetLesson} className="rounded-full bg-cream p-2.5 shadow-soft border border-line"><RotateCcw size={16} className="text-body"/></button>
             <button onClick={()=>{
               setNarrating(v=>!v);
               if(narrating){if(audioRef.current){audioRef.current.pause();audioRef.current=null;}window.speechSynthesis?.cancel();setAudioStatus("idle");}
-            }} className={`rounded-full p-3 shadow-soft border transition ${narrating?"border-glow/40 bg-glow/10 text-glow":"border-line bg-cream text-muted"}`}>
+            }} className={`rounded-full p-2.5 shadow-soft border transition ${narrating?"border-glow/40 bg-glow/10 text-glow":"border-line bg-cream text-muted"}`}>
               {narrating?<Volume2 size={16}/>:<VolumeX size={16}/>}
             </button>
           </div>
@@ -575,12 +575,12 @@ export default function Galaxy(){
       </div>
 
       {/* Mission pills */}
-      <div className="border-b border-line py-3.5 bg-cream/50">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4">
+      <div className="border-b border-line py-3.5 bg-cream/50 [@media(max-height:820px)]:py-2">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4 [@media(max-height:820px)]:gap-1.5">
           {SCENES.map((s,i)=>{
             const unlocked=i<=maxUnlocked,done=!!completeScenes[i];
             return(<button key={s.id} onClick={()=>unlocked&&setScene(i)} disabled={!unlocked}
-              className="rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] transition"
+              className="rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] transition [@media(max-height:820px)]:px-2.5 [@media(max-height:820px)]:text-[8px] [@media(max-height:820px)]:tracking-[0.18em]"
               style={{background:scene===i?"#1F1F1F":done?P.glowBg:P.cream,
                 color:scene===i?"#fff":done?P.glow:unlocked?P.body:P.muted,
                 borderColor:scene===i?"#1F1F1F":done?P.glow:unlocked?P.line:"transparent",
@@ -592,17 +592,17 @@ export default function Galaxy(){
       </div>
 
       {/* Main content */}
-      <section className="min-h-[calc(100vh-178px)] px-6 pb-28 pt-8">
+      <section className="min-h-[calc(100vh-178px)] px-6 pb-28 pt-8 [@media(max-height:820px)]:min-h-[calc(100vh-144px)] [@media(max-height:820px)]:px-4 [@media(max-height:820px)]:pb-20 [@media(max-height:820px)]:pt-4">
         <AnimatePresence mode="wait">
           <motion.div key={`${scene}-${phase}`}
             initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} transition={{duration:0.28}}
             className="mx-auto max-w-6xl">
 
-            <div className="mb-8 text-center">
-              <p className="text-xs font-black uppercase tracking-[0.5em] text-warm">{SCENES[scene].eyebrow}</p>
-              <h1 className="mt-2 font-display text-4xl leading-tight tracking-[-0.03em] text-ink md:text-5xl">{SCENES[scene].title}</h1>
+            <div className="mb-8 text-center [@media(max-height:820px)]:mb-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-warm">{SCENES[scene].eyebrow}</p>
+              <h1 className="mt-2 font-display text-4xl leading-tight text-ink md:text-5xl [@media(max-height:820px)]:mt-1.5 [@media(max-height:820px)]:text-3xl [@media(max-height:820px)]:md:text-4xl">{SCENES[scene].title}</h1>
               {phase==="learn"&&learnData.length>0&&(
-                <div className="mt-3 flex justify-center gap-1.5">
+                <div className="mt-3 flex justify-center gap-1.5 [@media(max-height:820px)]:mt-2">
                   {learnData.map((_,i)=>(<span key={i} className="inline-block h-1.5 w-7 rounded-full transition-all"
                     style={{background:i<learnStep?P.glow:i===learnStep?P.warm:P.line}}/>))}
                 </div>
@@ -610,14 +610,14 @@ export default function Galaxy(){
             </div>
 
             {/* Two-column: compact Nova left, wide widget right */}
-            <div className="grid items-start gap-6 md:grid-cols-[220px_1fr]">
+            <div className="grid items-start gap-6 md:grid-cols-[220px_1fr] [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:md:grid-cols-[180px_1fr]">
 
               {/* Nova — compact column */}
-              <div className="flex flex-col items-center gap-3">
-                <TutorMascot/>
+              <div className="flex flex-col items-center gap-3 [@media(max-height:820px)]:gap-2">
+                <TutorMascot className="relative h-40 w-36 [@media(max-height:820px)]:h-28 [@media(max-height:820px)]:w-24"/>
                 <div className="relative w-full">
                   <div className="absolute -left-2 top-6 h-0 w-0 border-y-6 border-r-[10px] border-y-transparent" style={{borderRightColor:P.cream}}/>
-                  <div className="rounded-2xl border px-4 py-3 text-sm font-semibold leading-[1.65]"
+                  <div className="rounded-2xl border px-4 py-3 text-sm font-semibold leading-[1.65] [@media(max-height:820px)]:leading-6"
                     style={{background:P.cream,borderColor:P.line,boxShadow:P.shadow,color:P.body}}>
                     {thinking?(<span className="flex items-center gap-2 italic" style={{color:P.muted}}>
                       <span className="inline-flex gap-1">{[0,0.15,0.3].map(d=>(<motion.span key={d} className="inline-block h-1.5 w-1.5 rounded-full" style={{background:P.muted}}
@@ -629,7 +629,7 @@ export default function Galaxy(){
               </div>
 
               {/* Widget — wide column */}
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-4 [@media(max-height:820px)]:gap-3">
                 {phase==="learn"&&learnData.length>0?(
                   <LearnWidget key={learnStep} data={learnData[learnStep]} onCorrect={handleLearnCorrect} onWrong={handleLearnWrong}/>
                 ):(
@@ -677,7 +677,7 @@ export default function Galaxy(){
 
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-line bg-cream/90 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 [@media(max-height:820px)]:h-16 [@media(max-height:820px)]:px-5">
           <AnimatePresence mode="wait">
             {lastAction?(<motion.div key={lastAction} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} exit={{opacity:0}}
               className="rounded-full border px-4 py-2 text-xs font-semibold"
@@ -696,7 +696,7 @@ export default function Galaxy(){
           </p>
           {(isSceneComplete||missionDone)&&(
             <motion.button onClick={nextScene} whileHover={{scale:1.03}} whileTap={{scale:0.97}}
-              className="rounded-full px-7 py-4 text-sm font-bold text-white"
+              className="rounded-full px-6 py-3 text-sm font-bold text-white"
               style={{background:"#1F1F1F",boxShadow:"0 4px 16px rgba(30,30,30,0.2)"}}>
               {scene===6?"Complete! 🎉":"Next mission →"}
             </motion.button>
@@ -836,6 +836,7 @@ function LaneLearnWidget({data,onCorrect,onWrong}){
   const[sel,setSel]=useState(null);
   const COLORS=["#F59E0B",P.blue,"#8B5CF6"];
   function pts(b){const p=[];for(let x=0;x<=8;x+=.25){const y=x+b;if(y>=0&&y<=8)p.push(`${sx(x)},${sy(y)}`)}return p.join(" ");}
+  const labelX=b=>Math.max(0.6,Math.min(6.5,8-b-0.45));
   return(<div className="w-full max-w-md space-y-3">
     <svg viewBox={`0 0 ${GW} ${GH}`} className="w-full cursor-pointer rounded-2xl" style={{border:`1px solid ${P.line}`,boxShadow:P.shadow}}>
       <GridBase/>
@@ -848,7 +849,8 @@ function LaneLearnWidget({data,onCorrect,onWrong}){
       }} style={{cursor:"pointer"}}>
         <polyline points={pts(lane.b)} fill="none" stroke={sel===i?COLORS[i]:`${COLORS[i]}55`} strokeWidth={sel===i?3.5:2}/>
         <circle cx={sx(0)} cy={sy(lane.b)} r={sel===i?8:5} fill={sel===i?COLORS[i]:`${COLORS[i]}88`}/>
-        <text x={sx(6.5)} y={sy(6.5+lane.b)-8} fill={COLORS[i]} fontSize="10" fontWeight="800">Lane {["A","B","C"][i]}</text>
+        <circle cx={sx(labelX(lane.b))} cy={sy(labelX(lane.b)+lane.b)} r="12" fill={P.cream} stroke={COLORS[i]} strokeWidth="2"/>
+        <text x={sx(labelX(lane.b))} y={sy(labelX(lane.b)+lane.b)+4} textAnchor="middle" fill={COLORS[i]} fontSize="11" fontWeight="900">{["A","B","C"][i]}</text>
       </g>))}
     </svg>
   </div>);
@@ -916,6 +918,7 @@ function YIntPractice({onCorrect,onWrong}){
   const LANES=[{b:1,label:"A"},{b:4,label:"B"},{b:7,label:"C"}];
   const COLORS=["#F59E0B",P.blue,"#8B5CF6"];
   function pts(b){const p=[];for(let x=0;x<=8;x+=.25){const y=x+b;if(y>=0&&y<=8)p.push(`${sx(x)},${sy(y)}`)}return p.join(" ");}
+  const labelX=b=>Math.max(0.6,Math.min(6.5,8-b-0.45));
   return(<div className="w-full max-w-md space-y-4">
     <svg viewBox={`0 0 ${GW} ${GH}`} className="w-full cursor-pointer rounded-2xl" style={{border:`1px solid ${P.line}`,boxShadow:P.shadow}}>
       <GridBase/>
@@ -925,7 +928,8 @@ function YIntPractice({onCorrect,onWrong}){
       {LANES.map((lane,i)=>(<g key={i} onClick={()=>{setSel(i);if(i===1)onCorrect();else onWrong(`Lane ${lane.label} has y-intercept ${lane.b} — not ${STATION_Y}. Which lane crosses the Y-axis at height ${STATION_Y}?`);}} style={{cursor:"pointer"}}>
         <polyline points={pts(lane.b)} fill="none" stroke={sel===i?COLORS[i]:`${COLORS[i]}55`} strokeWidth={sel===i?3.5:2}/>
         <circle cx={sx(0)} cy={sy(lane.b)} r={sel===i?8:5} fill={sel===i?COLORS[i]:`${COLORS[i]}88`}/>
-        <text x={sx(6.5)} y={sy(6.5+lane.b)-8} fill={COLORS[i]} fontSize="10" fontWeight="800">Lane {lane.label}</text>
+        <circle cx={sx(labelX(lane.b))} cy={sy(labelX(lane.b)+lane.b)} r="12" fill={P.cream} stroke={COLORS[i]} strokeWidth="2"/>
+        <text x={sx(labelX(lane.b))} y={sy(labelX(lane.b)+lane.b)+4} textAnchor="middle" fill={COLORS[i]} fontSize="11" fontWeight="900">{lane.label}</text>
       </g>))}
     </svg>
     {sel!==null&&<p className="text-center text-sm font-bold" style={{color:sel===1?P.glow:"#DC3232"}}>{sel===1?`✓ Lane B enters at y=${STATION_Y} — station reached!`:`✗ Lane ${LANES[sel].label} enters at y=${LANES[sel].b}, not y=${STATION_Y}.`}</p>}

@@ -353,7 +353,7 @@ export default function Home() {
 
       {/* Top bar */}
       <div className="relative border-b border-line bg-cream/80 backdrop-blur">
-        <div className="flex h-[74px] items-center justify-between px-7">
+        <div className="flex h-[74px] items-center justify-between px-7 [@media(max-height:820px)]:h-16 [@media(max-height:820px)]:px-5">
           <button onClick={() => {
             // Stop any playing or loading audio before leaving
             speakId.current++;
@@ -373,7 +373,7 @@ export default function Home() {
             <AnimatePresence>
               {streak >= 2 && (
                 <motion.span key={`s${streak}`} initial={{ scale:0 }} animate={{ scale:1 }} exit={{ scale:0 }}
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-black text-white"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black text-white"
                   style={{ background:"#E07A20", boxShadow:"0 0 10px rgba(224,122,32,0.4)" }}>
                   🔥 {streak} streak
                 </motion.span>
@@ -381,7 +381,7 @@ export default function Home() {
             </AnimatePresence>
             <motion.span key={xp} initial={{ scale:1.35 }} animate={{ scale:1 }}
               transition={{ type:"spring", stiffness:400, damping:18 }}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-black"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-black"
               style={{ background:"rgba(244,163,64,0.10)", border:"1px solid rgba(244,163,64,0.35)", color:"#C47D0A" }}>
               <Zap size={16}/> {xp} XP
             </motion.span>
@@ -390,7 +390,7 @@ export default function Home() {
               {narrating && audioStatus !== "idle" && (
                 <motion.div
                   initial={{ opacity:0, scale:0.85 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.85 }}
-                  className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold"
                   style={{
                     background:   audioStatus === "loading" ? "rgba(251,191,36,0.10)" : "rgba(66,196,106,0.10)",
                     borderColor:  audioStatus === "loading" ? "rgba(251,191,36,0.40)" : "rgba(66,196,106,0.40)",
@@ -417,7 +417,7 @@ export default function Home() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <button onClick={reset} className="rounded-full bg-cream p-3 shadow-soft border border-line">
+            <button onClick={reset} className="rounded-full bg-cream p-2.5 shadow-soft border border-line">
               <RotateCcw size={16} className="text-body"/>
             </button>
             <button
@@ -430,7 +430,7 @@ export default function Home() {
                   setAudioStatus("idle");
                 }
               }}
-              className={`rounded-full p-3 shadow-soft border transition ${narrating ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-600" : "border-line bg-cream text-muted"}`}>
+              className={`rounded-full p-2.5 shadow-soft border transition ${narrating ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-600" : "border-line bg-cream text-muted"}`}>
               {narrating ? <Volume2 size={16}/> : <VolumeX size={16}/>}
             </button>
           </div>
@@ -443,13 +443,13 @@ export default function Home() {
       </div>
 
       {/* Scene pills */}
-      <div className="border-b border-line py-3.5 bg-cream/50">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 px-6">
+      <div className="border-b border-line py-3.5 bg-cream/50 [@media(max-height:820px)]:py-2">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-2 px-6 [@media(max-height:820px)]:gap-1.5 [@media(max-height:820px)]:px-4">
           {SCENES.map((s, i) => {
             const unlocked = i <= maxUnlocked, done = !!completeScenes[i];
             return (
               <button key={s.id} onClick={() => unlocked && setScene(i)} disabled={!unlocked}
-                className="rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] transition"
+                className="rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] transition [@media(max-height:820px)]:px-3 [@media(max-height:820px)]:py-1 [@media(max-height:820px)]:text-[9px] [@media(max-height:820px)]:tracking-[0.2em]"
                 style={{ background:scene===i?"#1F1F1F":done?"rgba(66,196,106,0.10)":"#FFFDF9",
                   color:scene===i?"#fff":done?"#42C46A":unlocked?"#66615B":"#9C968D",
                   borderColor:scene===i?"#1F1F1F":done?"#42C46A":unlocked?"#E8DDD0":"transparent",
@@ -462,51 +462,46 @@ export default function Home() {
       </div>
 
       {/* Main */}
-      <section className="min-h-[calc(100vh-178px)] px-6 pb-28 pt-10">
+      <section className="min-h-[calc(100vh-178px)] px-6 pb-28 pt-10 [@media(max-height:820px)]:min-h-[calc(100vh-144px)] [@media(max-height:820px)]:px-4 [@media(max-height:820px)]:pb-20 [@media(max-height:820px)]:pt-5">
         <AnimatePresence mode="wait">
           <motion.div key={scene}
             initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
             exit={{ opacity:0, y:-12 }} transition={{ duration:0.32 }}
             className="mx-auto max-w-6xl">
 
-            {/* Single-column layout for Grade 2: Nova is compact guide, widget dominates */}
-            <div className="flex flex-col items-center gap-6 mx-auto max-w-2xl w-full">
-              <div className="text-center">
-                <p className="text-xs font-black uppercase tracking-[0.5em] text-warm">{SCENES[scene].eyebrow}</p>
-                <h1 className="mt-2 font-display text-3xl leading-tight tracking-[-0.02em] text-ink md:text-4xl">{SCENES[scene].title}</h1>
-              </div>
+            <div className="mb-8 text-center [@media(max-height:820px)]:mb-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.42em] text-warm">{SCENES[scene].eyebrow}</p>
+              <h1 className="mt-2 font-display text-3xl leading-tight text-ink md:text-4xl [@media(max-height:820px)]:mt-1.5 [@media(max-height:820px)]:text-2xl [@media(max-height:820px)]:md:text-3xl">{SCENES[scene].title}</h1>
+            </div>
 
-              {/* Nova — compact horizontal strip, not competing with the widget */}
-              <div className="flex items-center gap-3 w-full rounded-2xl border px-4 py-3"
-                style={{ background:"#FFFDF9", borderColor:"#E8DDD0", boxShadow:"0 4px 16px rgba(0,0,0,0.04)", minHeight:"68px" }}>
-                <div className="shrink-0 overflow-hidden" style={{ width:56, height:56, transform:"scale(0.6)", transformOrigin:"center" }}>
-                  <TutorMascot/>
-                </div>
-                <div className="flex-1">
-                  {thinking ? (
-                    <span className="flex items-center gap-2 italic" style={{ color:"#9C968D", fontSize:13 }}>
-                      <span className="inline-flex gap-1">
-                        {[0,0.15,0.3].map(d => (
-                          <motion.span key={d} className="inline-block h-1.5 w-1.5 rounded-full" style={{ background:"#9C968D" }}
-                            animate={{ y:[-3,0,-3] }} transition={{ repeat:Infinity, duration:0.8, delay:d }}/>
-                        ))}
+            <div className="grid items-start gap-6 md:grid-cols-[220px_1fr] [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:md:grid-cols-[180px_1fr]">
+              <div className="flex flex-col items-center gap-3 [@media(max-height:820px)]:gap-2">
+                <TutorMascot className="relative h-40 w-36 [@media(max-height:820px)]:h-28 [@media(max-height:820px)]:w-24"/>
+                <div className="relative w-full">
+                  <div className="absolute -left-2 top-6 h-0 w-0 border-y-6 border-r-[10px] border-y-transparent" style={{ borderRightColor:"#FFFDF9" }}/>
+                  <div className="rounded-2xl border px-4 py-3 text-sm font-semibold leading-[1.65] [@media(max-height:820px)]:leading-6"
+                    style={{ background:"#FFFDF9", borderColor:"#E8DDD0", boxShadow:"0 8px 30px rgba(0,0,0,0.06)", color:"#66615B" }}>
+                    {thinking ? (
+                      <span className="flex items-center gap-2 italic" style={{ color:"#9C968D" }}>
+                        <span className="inline-flex gap-1">
+                          {[0,0.15,0.3].map(d => (
+                            <motion.span key={d} className="inline-block h-1.5 w-1.5 rounded-full" style={{ background:"#9C968D" }}
+                              animate={{ y:[-3,0,-3] }} transition={{ repeat:Infinity, duration:0.8, delay:d }}/>
+                          ))}
+                        </span>
+                        Thinking…
                       </span>
-                      Nova is thinking…
-                    </span>
-                  ) : (
-                    <AnimatePresence mode="wait">
-                      <motion.p key={tutorText} initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }}
-                        exit={{ opacity:0 }} transition={{ duration:0.22 }}
-                        className="text-sm font-semibold leading-6" style={{ color:"#66615B" }}>
-                        {tutorText}
-                      </motion.p>
-                    </AnimatePresence>
-                  )}
+                    ) : (
+                      <AnimatePresence mode="wait">
+                        <motion.span key={tutorText} initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }}
+                          exit={{ opacity:0 }} transition={{ duration:0.22 }}>{tutorText}</motion.span>
+                      </AnimatePresence>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Widget — full-width, the star of the show */}
-              <div className="flex flex-col items-center gap-5 w-full">
+              <div className="flex flex-col items-center gap-5 w-full [@media(max-height:820px)]:gap-4">
                 {scene === 0 && (
                   // target=null = exploration mode, no built-in completion indicator
                   <Thermometer value={temp} target={null}
@@ -616,7 +611,7 @@ export default function Home() {
 
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-line bg-cream/90 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 [@media(max-height:820px)]:h-16 [@media(max-height:820px)]:px-5">
           <AnimatePresence mode="wait">
             {lastAction ? (
               <motion.div key={lastAction} initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
@@ -637,7 +632,7 @@ export default function Home() {
           </p>
           <motion.button disabled={!isSceneComplete} onClick={nextScene}
             whileHover={isSceneComplete ? { scale:1.03 } : {}} whileTap={isSceneComplete ? { scale:0.97 } : {}}
-            className="rounded-full px-7 py-4 text-sm font-bold text-white transition"
+            className="rounded-full px-7 py-4 text-sm font-bold text-white transition [@media(max-height:820px)]:px-6 [@media(max-height:820px)]:py-3"
             style={{ background:isSceneComplete?"#1F1F1F":"rgba(180,165,150,0.3)", cursor:!isSceneComplete?"not-allowed":"pointer",
               boxShadow:isSceneComplete?"0 4px 16px rgba(30,30,30,0.2)":"none" }}>
             {scene === 5 && isSceneComplete ? "All done! 🎉" : "Next chapter →"}
@@ -663,7 +658,7 @@ function ChapterSummary({ sceneId }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
       transition={{ delay: 0.35, duration: 0.4 }}
-      className="w-full max-w-xl rounded-[24px] border p-6"
+      className="w-full max-w-xl rounded-[24px] border p-6 [@media(max-height:820px)]:rounded-2xl [@media(max-height:820px)]:p-4"
       style={{ background:"#FFFDF9", borderColor:"#E8DDD0", boxShadow:"0 8px 30px rgba(0,0,0,0.06)" }}
     >
       <div className="flex items-center gap-2 mb-4">
@@ -672,12 +667,12 @@ function ChapterSummary({ sceneId }) {
           WHAT YOU LEARNED
         </p>
       </div>
-      <p className="text-base font-black mb-4" style={{ color:"#2E2E2E" }}>{s.title}</p>
-      <ul className="space-y-2.5">
+      <p className="text-base font-black mb-4 [@media(max-height:820px)]:mb-3 [@media(max-height:820px)]:text-sm" style={{ color:"#2E2E2E" }}>{s.title}</p>
+      <ul className="space-y-2.5 [@media(max-height:820px)]:space-y-2">
         {s.points.map((pt, i) => (
           <li key={i} className="flex items-start gap-2.5">
             <span className="mt-0.5 text-sm font-black" style={{ color:"#F4A340" }}>✦</span>
-            <span className="text-sm font-semibold leading-5" style={{ color:"#66615B" }}>{pt}</span>
+            <span className="text-sm font-semibold leading-6 [@media(max-height:820px)]:leading-5" style={{ color:"#66615B" }}>{pt}</span>
           </li>
         ))}
       </ul>
@@ -706,20 +701,20 @@ function NumberLineQuiz({ nlStep, onCorrect, onWrong }) {
   }
 
   return (
-    <div className="w-full max-w-xl space-y-6">
-      <div className="rounded-[28px] bg-white/80 p-8 shadow-card text-center">
-        <p className="text-2xl font-black text-ink">{prompt.text}</p>
+    <div className="w-full max-w-xl space-y-6 [@media(max-height:820px)]:max-w-lg [@media(max-height:820px)]:space-y-4">
+      <div className="rounded-[28px] bg-white/80 p-8 shadow-card text-center [@media(max-height:820px)]:rounded-2xl [@media(max-height:820px)]:p-5">
+        <p className="text-2xl font-black text-ink [@media(max-height:820px)]:text-xl">{prompt.text}</p>
         <p className="mt-2 text-sm text-muted">Question {Math.min(nlStep,2)+1} of 3</p>
 
         {/* Number line */}
-        <div className="mt-8 flex justify-center gap-2 flex-wrap">
+        <div className="mt-8 grid grid-cols-11 gap-1.5 [@media(max-height:820px)]:mt-5 [@media(max-height:820px)]:gap-1">
           {nums.map(n => {
             const isNeg  = n < 0;
             const isZero = n === 0;
             const wasLast = last === n;
             return (
               <motion.button key={n} whileTap={{ scale:0.88 }} onClick={() => handleClick(n)}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-black transition"
+                className="flex aspect-square w-full min-w-0 items-center justify-center rounded-full text-sm font-black transition"
                 style={{
                   background: wasLast
                     ? (prompt.check(n) ? "#42C46A" : "#EF4444")
@@ -737,7 +732,7 @@ function NumberLineQuiz({ nlStep, onCorrect, onWrong }) {
         </div>
 
         {/* Labels */}
-        <div className="mt-5 flex justify-between text-xs font-bold text-muted px-2">
+        <div className="mt-5 flex justify-between text-xs font-bold text-muted px-2 [@media(max-height:820px)]:mt-4">
           <span>← COLD numbers (minus sign)</span>
           <span>WARM numbers →</span>
         </div>
@@ -761,13 +756,13 @@ function PenguinWalk({ pos, setPos, askTutor }) {
   const steps = pos - (-2); // steps taken from start
 
   return (
-    <div className="w-full max-w-xl rounded-[32px] bg-white/80 p-8 shadow-card">
+    <div className="w-full max-w-xl rounded-[32px] bg-white/80 p-8 shadow-card [@media(max-height:820px)]:max-w-lg [@media(max-height:820px)]:rounded-2xl [@media(max-height:820px)]:p-5">
       <p className="text-center text-xl font-black">🐧 Pip needs 3 warm steps!</p>
 
       {/* Step circles */}
-      <div className="mt-4 flex justify-center gap-2">
+      <div className="mt-4 flex justify-center gap-2 [@media(max-height:820px)]:mt-3">
         {[1,2,3].map(i => (
-          <span key={i} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-black transition"
+          <span key={i} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-lg font-black transition [@media(max-height:820px)]:h-9 [@media(max-height:820px)]:w-9 [@media(max-height:820px)]:text-base"
             style={{ background: steps >= i ? "#42C46A" : "#E8DDD0", color: steps >= i ? "#fff" : "#9C968D" }}>
             {steps >= i ? "✓" : i}
           </span>
@@ -780,7 +775,7 @@ function PenguinWalk({ pos, setPos, askTutor }) {
       </p>
 
       {/* Number line */}
-      <div className="relative mt-10 h-20">
+      <div className="relative mt-10 h-20 [@media(max-height:820px)]:mt-7">
         <div className="absolute left-0 right-0 top-9 h-1.5 rounded-full bg-neutral-200"/>
         {/* Warm trail */}
         {pos > -2 && (
@@ -810,7 +805,7 @@ function PenguinWalk({ pos, setPos, askTutor }) {
       </div>
 
       {/* Buttons */}
-      <div className="mt-8 flex justify-center gap-4">
+      <div className="mt-8 flex justify-center gap-4 [@media(max-height:820px)]:mt-5">
         <button onClick={() => setPos(Math.max(-5, pos-1))}
           className="rounded-full border border-line bg-white px-6 py-3 font-bold text-blue-600 hover:bg-blue-50 transition">
           ← Colder
@@ -836,16 +831,16 @@ function BossQuestion({ answer, setAnswer, askTutor }) {
     : "border-line bg-white text-ink focus:border-orange-400";
 
   return (
-    <div className="w-full max-w-xl rounded-[32px] bg-white/80 p-9 text-center shadow-card">
-      <div className="text-5xl mb-4">🐧</div>
-      <p className="text-xl font-black leading-9">
+    <div className="w-full max-w-xl rounded-[32px] bg-white/80 p-9 text-center shadow-card [@media(max-height:820px)]:max-w-lg [@media(max-height:820px)]:rounded-2xl [@media(max-height:820px)]:p-5">
+      <div className="text-5xl mb-4 [@media(max-height:820px)]:mb-3 [@media(max-height:820px)]:text-4xl">🐧</div>
+      <p className="text-xl font-black leading-9 [@media(max-height:820px)]:text-lg [@media(max-height:820px)]:leading-7">
         It is −1° outside. 🥶<br/>Then it warms up 2°. ☀️<br/>What temperature is it now?
       </p>
 
       {/* Mini number line */}
-      <div className="mt-6 flex items-center justify-center gap-2">
+      <div className="mt-6 flex items-center justify-center gap-2 [@media(max-height:820px)]:mt-4">
         {[-3,-2,-1,0,1,2,3].map(n => (
-          <span key={n} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-black"
+          <span key={n} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-black [@media(max-height:820px)]:h-9 [@media(max-height:820px)]:w-9"
             style={{
               background: n===-1?"#DBEAFE":n===1?"#D1FAE5":n===0?"#EDE9FE":"#F3F4F6",
               color: n===-1?"#1D4ED8":n===1?"#065F46":n===0?"#7C3AED":"#9CA3AF",
@@ -856,10 +851,10 @@ function BossQuestion({ answer, setAnswer, askTutor }) {
       <p className="mt-2 text-xs font-semibold text-muted">Start at −1 → go 2 steps right → land at…?</p>
 
       {/* Input */}
-      <div className="mt-6 flex justify-center gap-3">
+      <div className="mt-6 flex justify-center gap-3 [@media(max-height:820px)]:mt-4">
         <motion.div animate={wrong ? { x:[-5,5,-5,5,0] } : {}} transition={{ duration:0.35 }}>
           <input value={answer} onChange={e => setAnswer(e.target.value)} placeholder="?"
-            className={`w-28 rounded-2xl border px-5 py-4 text-center text-3xl font-black outline-none transition ${inputCls}`}/>
+            className={`w-28 rounded-2xl border px-5 py-4 text-center text-3xl font-black outline-none transition [@media(max-height:820px)]:w-24 [@media(max-height:820px)]:py-3 [@media(max-height:820px)]:text-2xl ${inputCls}`}/>
         </motion.div>
         <span className="self-center text-2xl font-black">°</span>
       </div>
@@ -872,7 +867,7 @@ function BossQuestion({ answer, setAnswer, askTutor }) {
       </AnimatePresence>
 
       <button onClick={() => askTutor({ lesson:"arctic", type:"hint", scene:"boss", studentAnswer:answer||"blank", correctAnswer:1, concept:"Start at -1, take 2 steps right on the number line" })}
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition">
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition [@media(max-height:820px)]:mt-4">
         Ask Nova for a hint 💡
       </button>
     </div>

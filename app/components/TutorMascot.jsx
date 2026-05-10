@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 
-export default function TutorMascot() {
+export default function TutorMascot({ className = "relative h-40 w-36" }) {
   return (
     <motion.div
       initial={{ y: 4 }}
       animate={{ y: [4, -5, 4] }}
       transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-      className="relative h-40 w-36"
+      className={className}
       aria-label="AI tutor mascot"
     >
       <svg viewBox="0 0 150 170" className="h-full w-full drop-shadow-sm">
