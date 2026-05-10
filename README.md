@@ -11,7 +11,7 @@ The lesson teaches **negative numbers** through a simple visual metaphor: temper
 - SVG-based learning interactions
 - XP and gated scene progression
 - A warm AI tutor bubble
-- Claude-powered adaptive hints through a backend API route
+- OpenAI-powered adaptive hints through a backend API route
 - Browser Text-to-Speech narration fallback
 - A clean deployable Next.js prototype
 
@@ -53,7 +53,7 @@ The frontend sends lesson context to `/api/tutor`, including:
 - correct answer
 - misconception or concept being tested
 
-The backend uses Claude when `ANTHROPIC_API_KEY` is available. If no key is set, the app falls back to local rule-based hints so the prototype still works during review.
+The backend uses OpenAI when `OPENAI_API_KEY` is available. If no key is set, the app falls back to local rule-based hints so the prototype still works during review.
 
 Example payload:
 
@@ -77,11 +77,19 @@ Warmer means move right. Start at -4 and count six steps to the right.
 - **Frontend:** Next.js + React
 - **Styling:** Tailwind CSS
 - **Animation:** Framer Motion
-- **AI Tutor:** Claude via Anthropic SDK
+- **AI Tutor:** OpenAI SDK
 - **Voice:** Browser speechSynthesis for narration demo
 - **Interactive Layer:** SVG and React state
 - **Future Database:** Supabase / PostgreSQL
 - **Future Agent Automation:** OpenClaw for teacher/admin lesson-generation workflows
+
+## Environment Variables
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+OpenAI voice generation is optional. If the key is missing or the voice API fails, the app falls back to browser speech synthesis so narration can continue.
 
 ## Getting Started
 
@@ -99,13 +107,13 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Add your Anthropic API key:
+Add your OpenAI API key:
 
 ```bash
-ANTHROPIC_API_KEY=your_key_here
+OPENAI_API_KEY=your_key_here
 ```
 
-This step is optional. Without a key, the app uses local fallback tutor hints.
+This step is optional. Without a key, the app uses local fallback tutor hints and browser speech synthesis narration.
 
 ### 3. Run locally
 
@@ -132,7 +140,7 @@ The easiest deployment path is Vercel.
 
 1. Push this folder to GitHub.
 2. Import the repo in Vercel.
-3. Add `ANTHROPIC_API_KEY` in Vercel Environment Variables.
+3. Add `OPENAI_API_KEY` in Vercel Environment Variables.
 4. Deploy.
 
 If you do not add the API key, the deployed prototype will still run with fallback hints.

@@ -181,6 +181,30 @@ export default function Home() {
 
     setAudioStatus("loading");
 
+    const finish = () => {
+      setAudioStatus("idle");
+      const cb = onAudioEnd.current;
+      onAudioEnd.current = null;
+      cb?.();
+    };
+
+    const speakInBrowser = () => {
+      if (myId !== speakId.current) { setAudioStatus("idle"); return; }
+      if (!window.speechSynthesis) { finish(); return; }
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.rate = 0.80; utt.pitch = 1.14; utt.volume = 1;
+      utt.onstart = () => setAudioStatus("playing");
+      utt.onend = finish;
+      utt.onerror = finish;
+      const go = () => {
+        if (myId !== speakId.current) return;
+        utt.voice = pickVoice();
+        window.speechSynthesis.speak(utt);
+      };
+      window.speechSynthesis.getVoices().length > 0 ? go()
+        : window.speechSynthesis.addEventListener("voiceschanged", go, { once: true });
+    };
+
     try {
       let buffer;
       if (AUDIO_CACHE.has(text)) {
@@ -191,7 +215,7 @@ export default function Home() {
           body: JSON.stringify({ text }),
         });
         if (myId !== speakId.current) { setAudioStatus("idle"); return; }
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(`Speech API failed: ${res.status}`);
         buffer = await res.arrayBuffer();
         if (myId !== speakId.current) { setAudioStatus("idle"); return; }
         AUDIO_CACHE.set(text, buffer);
@@ -203,27 +227,18 @@ export default function Home() {
       audioRef.current = aud;
       aud.addEventListener("play",  () => setAudioStatus("playing"));
       aud.addEventListener("ended", () => {
-        setAudioStatus("idle"); URL.revokeObjectURL(url);
-        const cb=onAudioEnd.current; onAudioEnd.current=null; cb?.();
+        URL.revokeObjectURL(url);
+        finish();
       });
       aud.addEventListener("error", () => {
-        setAudioStatus("idle");
-        const cb=onAudioEnd.current; onAudioEnd.current=null; cb?.();
+        URL.revokeObjectURL(url);
+        speakInBrowser();
       });
-      aud.play();
+      await aud.play();
       return;
-    } catch { /* fall through to browser TTS */ }
-
-    if (myId !== speakId.current) { setAudioStatus("idle"); return; }
-    if (!window.speechSynthesis) { setAudioStatus("idle"); return; }
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 0.80; utt.pitch = 1.14; utt.volume = 1;
-    utt.onstart = () => setAudioStatus("playing");
-    utt.onend   = () => { setAudioStatus("idle"); const cb=onAudioEnd.current; onAudioEnd.current=null; cb?.(); };
-    utt.onerror = () => { setAudioStatus("idle"); const cb=onAudioEnd.current; onAudioEnd.current=null; cb?.(); };
-    const go = () => { utt.voice = pickVoice(); window.speechSynthesis.speak(utt); };
-    window.speechSynthesis.getVoices().length > 0 ? go()
-      : window.speechSynthesis.addEventListener("voiceschanged", go, { once: true });
+    } catch {
+      speakInBrowser();
+    }
   }
 
   // Screen shows short text. Nova speaks the full warm version.

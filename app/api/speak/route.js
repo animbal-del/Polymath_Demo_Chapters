@@ -1,39 +1,47 @@
 import OpenAI from "openai";
 
-// Server-side audio cache — survives between requests, resets on server restart.
-// Avoids re-calling OpenAI for identical text (same scene intros, common phrases).
-const serverCache = new Map(); // text → Buffer
+export const runtime = "nodejs";
+
+function jsonError(message, status) {
+  return Response.json({ error: message }, { status });
+}
 
 export async function POST(request) {
   try {
-    const { text } = await request.json();
-    if (!text?.trim() || !process.env.OPENAI_API_KEY) {
-      return new Response(null, { status: 404 });
+    if (!process.env.OPENAI_API_KEY) {
+      return jsonError("OPENAI_API_KEY is not configured.", 503);
     }
 
-    // Return cached audio immediately
-    if (serverCache.has(text)) {
-      return new Response(serverCache.get(text), {
-        headers: { "Content-Type": "audio/mpeg", "Cache-Control": "max-age=86400" },
-      });
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonError("Request body must be valid JSON.", 400);
+    }
+
+    const text = typeof body?.text === "string" ? body.text.trim() : "";
+    if (!text) {
+      return jsonError("Text is required.", 400);
     }
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const speech = await openai.audio.speech.create({
-      model: "tts-1",
-      voice: "nova",
+      model: "gpt-4o-mini-tts",
+      voice: "alloy",
       input: text,
-      speed: 0.92,
+      response_format: "mp3",
     });
 
     const buffer = Buffer.from(await speech.arrayBuffer());
-    serverCache.set(text, buffer); // cache for all future requests
 
     return new Response(buffer, {
-      headers: { "Content-Type": "audio/mpeg", "Cache-Control": "max-age=86400" },
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "no-store",
+      },
     });
-  } catch {
-    return new Response(null, { status: 500 });
+  } catch (error) {
+    console.error("Speech API error:", error);
+    return jsonError("Voice generation failed.", 500);
   }
 }

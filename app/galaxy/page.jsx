@@ -279,13 +279,27 @@ export default function Galaxy(){
     if(audioRef.current){audioRef.current.pause();audioRef.current=null;}
     window.speechSynthesis?.cancel();
     setAudioStatus("loading");
+    const finish=()=>{
+      setAudioStatus("idle");
+      const cb=onAudioEnd.current;onAudioEnd.current=null;cb?.();
+    };
+    const speakInBrowser=()=>{
+      if(myId!==speakId.current){setAudioStatus("idle");return;}
+      if(!window.speechSynthesis){finish();return;}
+      const utt=new SpeechSynthesisUtterance(text);utt.rate=0.88;utt.pitch=1.06;
+      utt.onstart=()=>setAudioStatus("playing");
+      utt.onend=finish;
+      utt.onerror=finish;
+      const go=()=>{if(myId!==speakId.current)return;utt.voice=pickVoice();window.speechSynthesis.speak(utt);};
+      window.speechSynthesis.getVoices().length>0?go():window.speechSynthesis.addEventListener("voiceschanged",go,{once:true});
+    };
     try{
       let buffer;
       if(AUDIO_CACHE.has(text)){buffer=AUDIO_CACHE.get(text);}
       else{
         const res=await fetch("/api/speak",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
         if(myId!==speakId.current){setAudioStatus("idle");return;}
-        if(!res.ok)throw new Error();
+        if(!res.ok)throw new Error(`Speech API failed: ${res.status}`);
         buffer=await res.arrayBuffer();
         if(myId!==speakId.current){setAudioStatus("idle");return;}
         AUDIO_CACHE.set(text,buffer);
@@ -295,24 +309,10 @@ export default function Galaxy(){
       const url=URL.createObjectURL(blob);
       const aud=new Audio(url);audioRef.current=aud;
       aud.addEventListener("play",()=>setAudioStatus("playing"));
-      aud.addEventListener("ended",()=>{
-        setAudioStatus("idle");URL.revokeObjectURL(url);
-        const cb=onAudioEnd.current;onAudioEnd.current=null;cb?.();
-      });
-      aud.addEventListener("error",()=>{
-        setAudioStatus("idle");
-        const cb=onAudioEnd.current;onAudioEnd.current=null;cb?.();
-      });
-      aud.play();return;
-    }catch{}
-    if(myId!==speakId.current){setAudioStatus("idle");return;}
-    if(!window.speechSynthesis){setAudioStatus("idle");return;}
-    const utt=new SpeechSynthesisUtterance(text);utt.rate=0.88;utt.pitch=1.06;
-    utt.onstart=()=>setAudioStatus("playing");
-    utt.onend=()=>{setAudioStatus("idle");const cb=onAudioEnd.current;onAudioEnd.current=null;cb?.();};
-    utt.onerror=()=>{setAudioStatus("idle");const cb=onAudioEnd.current;onAudioEnd.current=null;cb?.();};
-    const go=()=>{utt.voice=pickVoice();window.speechSynthesis.speak(utt);};
-    window.speechSynthesis.getVoices().length>0?go():window.speechSynthesis.addEventListener("voiceschanged",go,{once:true});
+      aud.addEventListener("ended",()=>{URL.revokeObjectURL(url);finish();});
+      aud.addEventListener("error",()=>{URL.revokeObjectURL(url);speakInBrowser();});
+      await aud.play();return;
+    }catch{speakInBrowser();}
   }
 
   function setTutor(screenText,spokenText){setTutorText(screenText);speak(spokenText??screenText);}
