@@ -328,6 +328,11 @@ export default function Galaxy(){
     boss:"Final mission, Navigator. Every skill you have — converges right now!",
   };
 
+  function estimateNarrationMs(text){
+    const words=(text||"").trim().split(/\s+/).filter(Boolean).length;
+    return Math.min(Math.max((words/2.2)*1000+3500,9000),60000);
+  }
+
   function handleLearnCorrect(exp,expSpoken){
     setTutor(exp,expSpoken);
     flash_();burstSmall();
@@ -347,7 +352,7 @@ export default function Galaxy(){
       }
     };
     onAudioEnd.current=doAdvance;
-    autoTimer.current=setTimeout(doAdvance,narrating?9000:1800);
+    autoTimer.current=setTimeout(doAdvance,narrating?estimateNarrationMs(expSpoken||exp):1800);
   }
   function handleLearnWrong(hint){onAudioEnd.current=null;setTutor(hint,hint);}
 
