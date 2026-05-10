@@ -25,11 +25,18 @@ HINT PACING by attempt number:
 - Attempt 2: count out the steps together slowly
 - Attempt 3+: walk through it one tiny step at a time
 
-Keep ALL responses under 30 words total. Short feels warm for young kids.`;
+RAISE HAND QUESTIONS:
+- First decide if the question is about this lesson, a needed beginner idea, a slightly advanced next-step idea, or off-topic.
+- If relevant: answer directly with one tiny example.
+- If beginner: say "Great starter question!" then explain simply.
+- If advanced: say "That's a next-level idea." Give one small preview, then return to the chapter.
+- If off-topic: kindly say it is not covered in this class yet, and ask them to finish the current chapter.
+
+Keep ALL responses under 45 words total. Short feels warm for young kids.`;
 
 const GALAXY_NOVA = `You are Nova, a friendly star explorer robot helping 7 to 9 year old kids learn to read star map addresses.
 
-THE STORY: Every star in the galaxy has a secret address made of two numbers. Kids are learning to find stars using these addresses!
+THE STORY: Kids are decoding a galaxy map. They learn how points, slopes, and line equations guide a spaceship.
 
 YOUR CHARACTER:
 - Warm, patient, and very excited — like a friendly robot best friend
@@ -39,14 +46,58 @@ YOUR CHARACTER:
 - When they find the star: cheer for exactly what they did!
 - When they miss: "Ooh, let's count the steps together!"
 
-COORDINATES IN SIMPLE WORDS:
+GALAXY MATH IN SIMPLE WORDS:
 - The first number = how many steps to go RIGHT
 - The second number = how many steps to go UP
 - Always right first, then up — like reading a map!
 - The sideways line = the X line
 - The up-down line = the Y line
+- Slope = steepness. It is rise divided by run.
+- Rise = how far up. Run = how far right.
+- Y-intercept = where the line touches the Y line.
+- y = mx + b is a path rule.
+- m is slope. b is the y-intercept.
+- Parallel lines have the same slope.
+- Two points can make one straight lane.
+- To check a point, put x into the rule and see y.
 
-Keep ALL responses under 30 words total.`;
+RAISE HAND QUESTIONS:
+- First decide if the question is on-topic, beginner/prerequisite, advanced, or off-topic.
+- If on-topic: answer clearly using the current chapter and one tiny example.
+- If beginner: say "Great starter question!" then explain the missing idea.
+- If advanced: say "That's a next-level idea." Give a small preview, then guide them back.
+- If off-topic: kindly say it is not covered in this class yet, and ask them to finish the current mission.
+- Never pretend unrelated topics are part of the lesson.
+
+Keep ALL responses under 55 words total.`;
+
+const LESSON_SCOPES = {
+  arctic: {
+    title: "Pip's Winter Adventure",
+    topics: "thermometers, hot and cold, zero as freezing point, negative numbers, minus sign, number line, moving right to add or get warmer",
+    scenes: {
+      intro: "exploring that higher numbers are hotter and lower numbers are colder",
+      freeze: "finding zero, the freezing point",
+      below: "going below zero into negative numbers",
+      numline: "finding cold, zero, and warm numbers on a number line",
+      walk: "moving right on the number line to get warmer",
+      boss: "solving -1 plus 2 by moving right",
+    },
+  },
+  galaxy: {
+    title: "The Galaxy Code",
+    topics: "coordinate pairs, x-axis, y-axis, x then y, slope, rise, run, y-intercept, y = mx + b, m as slope, b as y-intercept, parallel lines, equations from two points, checking if a point is on a line",
+    scenes: {
+      coord: "coordinate grid, x-axis, y-axis, and ordered pairs",
+      slope: "slope as rise divided by run",
+      yint: "y-intercept as where a line meets the Y-axis",
+      formula: "y = mx + b, with m as slope and b as y-intercept",
+      parallel: "parallel lines having the same slope",
+      twopts: "using two points to find slope and b",
+      boss: "checking y = 2x + 2 at x = 3 to reach (3,8)",
+    },
+  },
+};
 
 // ── Route ─────────────────────────────────────────────────────────────────────
 
@@ -84,7 +135,7 @@ export async function POST(request) {
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      max_tokens: 80,
+      max_tokens: type === "question" ? 140 : 80,
       messages: [
         { role: "system", content: system },
         { role: "user",   content: userMessage },
@@ -101,10 +152,26 @@ export async function POST(request) {
 // ── User message builder ──────────────────────────────────────────────────────
 
 function buildUserMessage({ lesson, type, scene, attempt, studentAnswer, correctAnswer, concept, studentQuestion, previousScene }) {
-  const isGalaxy = lesson === "galaxy";
-
   if (type === "question") {
-    return `Scene: ${scene}. A child asked: "${studentQuestion}". Answer in simple words a 7 year old understands. Max 30 words.`;
+    const scope = LESSON_SCOPES[lesson] ?? LESSON_SCOPES.arctic;
+    const sceneFocus = scope.scenes[scene] ?? "the current chapter";
+    return `Lesson: ${scope.title}.
+Current scene: ${scene}.
+Current scene focus: ${sceneFocus}.
+Lesson topics: ${scope.topics}.
+A child asked: "${studentQuestion}".
+
+Classify the question silently:
+1. On-topic for this lesson or current scene.
+2. Beginner/prerequisite question needed for this lesson.
+3. Advanced but connected to this lesson.
+4. Off-topic or not covered in this class.
+
+Then answer:
+- For 1 or 2, answer simply and helpfully.
+- For 3, give a tiny preview and say we will learn more later.
+- For 4, say this topic is not covered in this class yet. Ask them to finish the current chapter/mission.
+Use simple words. Max ${lesson === "galaxy" ? 55 : 45} words.`;
   }
   if (type === "complete") {
     const effort = attempt <= 1 ? "First try — celebrate their brilliance!" : `Took ${attempt} tries — celebrate their persistence warmly!`;
@@ -140,6 +207,10 @@ function buildArcticFallback({ type, scene, attempt, studentAnswer, correctAnswe
     if (q.includes("zero"))     return "Zero is the freezing point! That's where water turns to ice. ❄️";
     if (q.includes("negative")) return "Negative numbers are colder than zero! We put a minus sign in front.";
     if (q.includes("minus"))    return "A minus sign means we went below zero — colder than the freezing point!";
+    if (q.includes("add") || q.includes("plus") || q.includes("warmer")) return "Adding means moving right here. Warmer also means moving right. Can you try one step?";
+    if (q.includes("subtract") || q.includes("colder")) return "Colder means moving left on our number line. We will practice that after warming up!";
+    if (q.includes("multiply") || q.includes("multiplication") || q.includes("divide") || q.includes("division") || q.includes("fraction") || q.includes("algebra")) return "That's a next-level idea. Today we are learning zero, minus signs, and temperature numbers.";
+    if (isClearlyOffTopic(q)) return "That topic is not covered in this class yet. Let's finish this temperature chapter first, okay?";
     return "Great question! Negative numbers are numbers below zero. They have a little minus sign in front!";
   }
   if (type === "complete") {
@@ -165,10 +236,19 @@ function buildArcticFallback({ type, scene, attempt, studentAnswer, correctAnswe
 function buildGalaxyFallback({ type, scene, attempt, studentQuestion }) {
   if (type === "question") {
     const q = (studentQuestion || "").toLowerCase();
-    if (q.includes("x"))     return "The X line goes sideways! X numbers tell you steps to the RIGHT.";
-    if (q.includes("y"))     return "The Y line goes up and down! Y numbers tell you steps going UP.";
-    if (q.includes("address") || q.includes("coordinate")) return "A star's address has two numbers. First go right, then go up!";
-    return "Great question! First number means steps right. Second number means steps up. Like a treasure map!";
+    if (isClearlyOffTopic(q)) return "That topic is not covered in this class yet. Let's finish this galaxy mission first.";
+    if (q.includes("x-axis") || q.includes("x axis")) return "The X-axis is the sideways line. X tells how many steps right.";
+    if (q.includes("y-axis") || q.includes("y axis")) return "The Y-axis goes up and down. Y tells how many steps up.";
+    if (q.includes("coordinate") || q.includes("address") || q.includes("point")) return "A point has two numbers. Go right first, then up. Like a map address.";
+    if (q.includes("slope") || q.includes("steep")) return "Slope means steepness. Count rise up, then run right. Slope is rise divided by run.";
+    if (q.includes("rise")) return "Rise means how far the lane goes up. It is the up part of slope.";
+    if (q.includes("run")) return "Run means how far the lane goes right. It is the sideways part of slope.";
+    if (q.includes("intercept") || q.includes("b value")) return "The y-intercept is where the line touches the Y-axis. In y = mx + b, it is b.";
+    if (q.includes("mx") || q.includes("equation") || q.includes("formula")) return "y = mx + b is a path rule. m is slope. b is the starting height.";
+    if (q.includes("parallel")) return "Parallel lines never meet. They have the same slope, like two matching space lanes.";
+    if (q.includes("two point") || q.includes("2 point")) return "Two points can make one straight lane. First find slope, then find b.";
+    if (q.includes("quadratic") || q.includes("parabola") || q.includes("calculus")) return "That's a next-level idea. Today we are learning straight-line paths first.";
+    return "Great question! If it is about our map, use x for right, y for up, slope for steepness.";
   }
   if (type === "complete") {
     const msgs = {
@@ -190,4 +270,12 @@ function buildGalaxyFallback({ type, scene, attempt, studentQuestion }) {
   };
   const list = hints[scene] || ["Count your steps carefully!", "Right first, then up!", "You can do this!"];
   return list[Math.min((attempt || 1) - 1, list.length - 1)];
+}
+
+function isClearlyOffTopic(q) {
+  return [
+    "football", "basketball", "movie", "song", "game", "roblox", "minecraft",
+    "food", "pizza", "weather today", "president", "capital", "history",
+    "dinosaur", "animal", "joke", "story",
+  ].some(word => q.includes(word));
 }
