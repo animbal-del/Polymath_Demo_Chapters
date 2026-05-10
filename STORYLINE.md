@@ -1,695 +1,551 @@
-# Polymath Mini — Storyline & Conversational Design
-### Grade 2–3 Edition (Ages 7–9)
+# Polymath Mini — Current Storyline & Conversational Design
 
-> **Status: PROPOSAL — review and edit before implementation.**  
-> This document defines the full conversational design including what appears on screen vs what Nova speaks aloud. Edit freely. Once approved, the dev team will update all scene text and TTS settings.
-
----
-
-## The Core Principle: Screen ≠ Speech
-
-The most important rule in this redesign.
-
-Young kids get overwhelmed when everything is text on screen. The screen should feel almost empty — calm, simple, one thing to look at. Nova's voice carries the story, the warmth, the explanation.
-
-Think of it like a picture book:
-- **The picture (screen):** Simple, visual, one clear thing to notice or do
-- **Reading aloud (Nova's voice):** Warm, detailed, conversational — the real content
-
-```
-WRONG (current approach):
-  Screen shows: "Brrr! Welcome, explorer! I'm Nova, your Arctic guide. Something's
-  wrong — the temperature is DROPPING fast. Drag the thermometer all the way down
-  to 0°. That's the freezing point, where water turns to ice!"
-
-RIGHT (new approach):
-  Screen shows: "Can you find zero on the thermometer? ❄️"
-  Nova speaks:  "Hey! I'm Nova. Let me tell you a secret — when the thermometer
-                 reaches zero, something magical happens. Water turns into ice!
-                 Just like the ice cubes in your freezer at home!
-                 Can you drag the red line all the way down to zero? Try it!"
-```
-
-The screen is the cue card. Nova's voice is the teacher.
+> **Status: Current implementation reference.**  
+> This document reflects the lessons, Nova behavior, voice layer, and Raise Hand tutoring flow currently implemented in the app.
 
 ---
 
-## Nova's Voice — Grade 2–3 Edition
+## Product Frame
 
-Nova should feel like the coolest, friendliest older kid who happens to know everything.
+Polymath Mini is an interactive lesson prototype with two playable lessons:
 
-### Vocabulary Rules
-| Don't say | Say instead |
-|---|---|
-| "temperature" (first use) | "how cold or hot something is" |
-| "negative" (first use) | "numbers that live below zero" |
-| "y-intercept" | "where the line starts" |
-| "slope" | "how steep the path is" |
-| "coordinate" | "the address of a star" |
-| "axis" | "the number line going sideways / up-down" |
+1. **Pip's Winter Adventure**  
+   Grade 2 numbers lesson about thermometers, zero, negative numbers, and moving on a number line.
 
-Always say the hard word AFTER the simple explanation:
-> "When numbers go below zero — below the freezing point — we call them negative numbers."
+2. **The Galaxy Code**  
+   Grade 7 algebra lesson about coordinate grids, slope, y-intercepts, `y = mx + b`, parallel lines, equations from two points, and point verification.
 
-### Sentence Structure
-- Max 12 words per sentence
-- One idea at a time
-- Questions at the end of every explanation (invite response)
-- Lots of "You know how..." and "Just like..." to connect to real life
+The experience is built around:
 
-### Pacing (TTS settings to change in code)
-```
-Current:  speed 0.95, pitch 1.06
-Proposed: speed 0.80, pitch 1.14
-```
-Slower speed = more processing time. Higher pitch = warmer, friendlier.
-
-### Celebration Rules
-- Never just say "Correct!"
-- Always name what they did: "You found the freezing point! That's EXACTLY where water turns to ice!"
-- Use physical excitement words: "Wow!", "Oh yes!", "You GOT it!"
-- Short pause (implied in punctuation) before the celebration
-
-### Wrong Answer Rules
-- Never make it feel bad
-- Always give a fresh approach, not repeat the same words
-- Use "Hmm, let me show you a trick..." not "Try again"
-- Max 2 redirects before Nova gives a strong hint with animation
+- short on-screen directions
+- richer spoken narration
+- direct manipulation activities
+- XP and gated progression
+- Nova as the tutor/guide
+- Raise Hand questions through `/api/tutor`
+- OpenAI voice through `/api/speak`, with browser speech synthesis fallback
 
 ---
 
-## The Screen vs Speech Framework
+## Screen Text vs Spoken Text
 
-Every moment in the lesson has four elements. Only the first two appear on screen.
+The code intentionally separates what appears on screen from what Nova says aloud.
 
-```
-[SCREEN TEXT]   — What the bubble / UI shows (SHORT. One line. Sometimes an emoji.)
-[NOVA SPEAKS]   — What Nova says out loud (WARM. Conversational. Relatable.)
-[VISUAL]        — What the student sees on the page (interaction, animation)
-[STUDENT DOES]  — The action (drag, click, type)
-```
+**Screen text**
+- Short cue.
+- One clear task.
+- Used in Nova's speech bubble.
 
-**Screen text principles:**
-- 1 sentence max. Often just a question or a single prompt.
-- Font is big enough a 7-year-old can read it comfortably
-- Can use emojis (one, not many)
-- Never repeat what Nova just said — they're different messages
+**Spoken text**
+- Warmer and fuller.
+- Carries the teaching.
+- Played through OpenAI TTS when available.
+- Falls back to browser speech synthesis when OpenAI voice fails.
 
-**Nova speaks principles:**
-- Full, warm sentences
-- Reference real life (ice cubes, playground, TV remote)
-- Say the concept in 2-3 different ways in the same speech
-- End almost every speech with a question or invitation to act
+This is implemented with `screenText`, `spokenText`, `debrief`, and `debriefSpoken` fields in the lesson scene definitions.
 
 ---
 
-## Lesson 1: The Temperature Trap (Grade 2–3 Redesign)
+## Nova
 
-### New Story Frame
+Nova is the friendly tutor for both lessons.
 
-**Old:** Arctic Research Station, scientist explorer  
-**New:** You're going to play outside in winter. First, you need to check if it's cold enough to see your breath — or even make ice!
+### General Personality
 
-Nova is the friendly thermometer expert who lives inside the weather app.
+- Warm, patient, and encouraging.
+- Gives short explanations.
+- Avoids shaming language.
+- Names the concept the student just used.
+- Keeps the student focused on the current lesson.
 
-**Opening line Nova speaks (not shown on screen):**
-> "Hi! I'm Nova. Today we're going to learn something really cool — and I mean REALLY cool — about cold! You know when it's winter and you can see your breath? Or when puddles turn into ice? We're going to find out exactly how cold it needs to be for that to happen. Ready? Let's go!"
+### Raise Hand Behavior
 
-**Screen shows at the start:** `"Ready to explore? 🌨️"`
+Raise Hand captures a spoken question using browser speech recognition. If speech recognition is unavailable, the app asks the student to type the question.
 
----
+The question is sent to `/api/tutor` with:
 
-### Chapter 1 · How Cold Is Cold?
+- `lesson`
+- `type: "question"`
+- current `scene`
+- `studentQuestion`
 
-**Learning goal:** Zero is a special number — the freezing point  
-**Screen heading:** `"The Freezing Line ❄️"`
+Nova classifies questions silently as:
 
----
+1. **On-topic** for the current lesson or scene.
+2. **Beginner/prerequisite** and useful for the lesson.
+3. **Advanced but connected** to the lesson.
+4. **Off-topic / not covered** in the class.
 
-#### Opening
+Nova then responds:
 
-```
-[SCREEN TEXT]
-"Can you find zero on the thermometer?"
+- On-topic or beginner: answers simply and helpfully.
+- Advanced: gives a small preview and guides the learner back.
+- Off-topic: says the topic is not covered yet and asks the learner to finish the current chapter or mission.
 
-[NOVA SPEAKS]
-"Look at the thermometer on your screen. 
- See all those numbers?
- There's a very special one hiding in there — ZERO!
- Zero is where something magical happens.
- When the temperature hits zero...
- water turns into ice!
- Just like the ice cubes in your freezer.
- Can you drag the red part down to find zero?
- Give it a try!"
-
-[VISUAL]  Thermometer showing +10°, draggable
-[STUDENT DOES]  Drags mercury down toward 0°
-```
+If OpenAI is unavailable, local fallback logic handles common Temperature and Galaxy questions.
 
 ---
 
-#### While Dragging (milestone feedback at 5°)
+## Lesson 1: Pip's Winter Adventure
 
-```
-[SCREEN TEXT]
-"Almost there! Keep going... ❄️"
+**Audience:** Grade 2  
+**Subject:** Numbers  
+**Core concept:** Negative numbers through temperature  
+**Chapters:** 6  
 
-[NOVA SPEAKS]
-"Oh, you're getting colder!
- 5 degrees... 4 degrees...
- You're SO close to the magic number!
- Keep dragging down!"
-```
+### Story Frame
 
----
+Pip the penguin is exploring cold weather. Nova helps the student use a thermometer and number line to understand hot, cold, zero, and numbers below zero.
 
-#### On Reaching 0°
+### Chapter 1 — Thermometer
 
-```
-[SCREEN TEXT]
-"You found it! That's the freezing point! 🧊"
+**ID:** `intro`  
+**Pill:** `01 · THERMOMETER`  
+**Title:** `What does a thermometer do? 🌡️`  
+**Screen text:** `Drag it UP ☀️ then DOWN ❄️ to explore!`
 
-[NOVA SPEAKS]
-"YES! You found zero!
- This is called the FREEZING point.
- That means if it were this cold outside right now...
- puddles would turn to ice!
- You could go ice skating on them!
- But wait — can it get even colder than zero?
- Let's find out!"
+**Learning goal**
+- Higher numbers mean hotter.
+- Lower numbers mean colder.
+- A thermometer uses numbers to show temperature.
 
-[VISUAL]  Small animation: droplets → ice crystals
-```
+**Student action**
+- Drag the thermometer up near hot values.
+- Drag the thermometer down near cold values.
 
----
+**Completion**
+- Student must explore both hot and cold sides.
 
-### Chapter 2 · Colder Than Cold!
-
-**Learning goal:** Numbers go below zero — negative numbers  
-**Screen heading:** `"Below Zero 🥶"`
+**Debrief**
+- Thermometers measure temperature.
 
 ---
 
-#### Opening
+### Chapter 2 — Freezing
 
-```
-[SCREEN TEXT]
-"Can numbers go below zero?"
+**ID:** `freeze`  
+**Pill:** `02 · FREEZING`  
+**Title:** `There's a magic number that makes ice! ❄️`  
+**Screen text:** `Find the magic number — drag to ZERO!`
 
-[NOVA SPEAKS]
-"So we found zero — the freezing point.
- But what if it gets even colder?
- What number comes after zero when we go down?
- Here's the surprising thing...
- numbers don't stop at zero!
- They keep going — but now we put a little minus sign in front.
- So ONE below zero is called... MINUS one! Or negative one.
- Pretty cool, right?
- Let's drag the thermometer even further down.
- Can you get it all the way to MINUS five?"
+**Learning goal**
+- Zero is the freezing point.
+- Water turns to ice at zero degrees.
 
-[SCREEN TEXT when transitioning]
-"Drag past zero — numbers keep going! ➡"
+**Student action**
+- Drag the thermometer from `10°` down to `0°`.
 
-[VISUAL]  Thermometer, mercury just at 0°, target marker at −5°
-[STUDENT DOES]  Drags below 0°
-```
+**Completion**
+- Temperature reaches `0°` or below.
+
+**Debrief**
+- Zero is the freezing point.
 
 ---
 
-#### Crossing Zero (first moment below 0)
+### Chapter 3 — Below Zero
 
-```
-[SCREEN TEXT]
-"Whoa! We went below zero! 😮"
+**ID:** `below`  
+**Pill:** `03 · BELOW ZERO`  
+**Title:** `Numbers go below zero — with a minus sign! 🥶`  
+**Screen text:** `Go past zero — keep dragging to MINUS 3!`
 
-[NOVA SPEAKS]
-"Look at that! We crossed the zero line!
- Now we're in the land of NEGATIVE numbers.
- Negative means less than zero.
- Colder than the freezing point.
- So cold that even ice would feel warm next to this!
- Keep going — let's reach minus five!"
-```
+**Learning goal**
+- Numbers continue below zero.
+- Numbers below zero are negative.
+- Negative numbers use a minus sign.
 
----
+**Student action**
+- Drag the thermometer below zero to `-3°`.
 
-#### On Reaching −5°
+**Completion**
+- Temperature reaches `-3°` or below.
 
-```
-[SCREEN TEXT]
-"−5°! That's really really cold! 🌨️"
-
-[NOVA SPEAKS]
-"You did it! Minus five degrees!
- That's five whole steps below zero.
- If it was this cold outside right now,
- you'd need your biggest, fluffiest winter coat!
- And that little minus sign in front of the five?
- That's how we write numbers below zero.
- Scientists, weather people — they use these numbers every single day!
- Negative numbers are real, and now you know them!"
-
-[VISUAL]  Confetti, temperature badge shows −5°
-```
+**Debrief**
+- Negative numbers are real and useful.
 
 ---
 
-### Chapter 3 · The Number Walk
+### Chapter 4 — Number Line
 
-**Learning goal:** Number line — right = warmer, left = colder  
-**Screen heading:** `"The Warm-Up Walk 🚶‍♂️"`
+**ID:** `numline`  
+**Pill:** `04 · NUMBER LINE`  
+**Title:** `Numbers go both ways — left AND right! 🔵🔴`  
+**Screen text:** `Three quick questions — click the right number!`
 
----
+**Learning goal**
+- Negative numbers are left of zero.
+- Positive numbers are right of zero.
+- Zero sits in the middle.
 
-#### Opening
+**Student action**
+- Click a cold number.
+- Click zero.
+- Click a warm number.
 
-```
-[SCREEN TEXT]
-"Help the penguin get warmer! 🐧"
+**UI note**
+- The number choices are displayed in one fixed row so the final number does not wrap onto a new line.
 
-[NOVA SPEAKS]
-"Meet our friend — a little penguin stuck in the cold!
- He's at minus four right now.
- That's four steps below zero — very chilly!
- He needs to take six steps toward the WARM side.
- Look at the line below him.
- See the numbers going to the right?
- Moving right means getting warmer.
- Moving left means getting colder.
- Can you help him walk six steps to the right?
- Press the Warmer button six times!"
+**Completion**
+- Student answers all three prompts.
 
-[VISUAL]  Number line −6 to +6, penguin at −4
-[STUDENT DOES]  Clicks Warmer → button
-```
+**Debrief**
+- The number line has two sides.
 
 ---
 
-#### Step-by-step feedback (each button press)
+### Chapter 5 — Penguin Walk
 
-```
-[SCREEN TEXT changes each step]
-Step 1: "−3 now! 5 more steps! 🐧"
-Step 2: "−2! Getting warmer! 4 to go..."
-Step 3: "−1! Almost at zero! 3 to go..."
-Step 4: "ZERO! You crossed the line! 2 more!"
-Step 5: "+1! Almost warm! 1 more step!"
-Step 6: "+2! 🎉"
+**ID:** `walk`  
+**Pill:** `05 · PENGUIN WALK`  
+**Title:** `Help Pip walk from cold to warm! 🐧`  
+**Screen text:** `Press WARMER 3 times — one step at a time!`
 
-[NOVA SPEAKS on hitting zero]
-"Wait — you just crossed zero!
- You went from the cold side to the warm side!
- That's amazing!
- Just like coming inside from the snow —
- you crossed the zero line!
- Keep going — two more steps!"
+**Learning goal**
+- Moving right means getting warmer.
+- Moving right is like adding.
+- Negative plus positive can cross zero.
 
-[NOVA SPEAKS on reaching +2]
-"The penguin made it!
- You started at minus four.
- You took six steps to the right.
- And you landed on PLUS two!
- Minus four... plus six steps... equals two!
- You just did math with negative numbers!
- I'm SO proud of you!"
-```
+**Student action**
+- Start at `-2`.
+- Move three warmer steps to `1`.
+
+**Completion**
+- Pip reaches `1`.
+
+**Debrief**
+- `-2 + 3 = 1`.
 
 ---
 
-### Chapter 4 (Boss) · The Big Temperature Question
+### Chapter 6 — Big Question
 
-**Learning goal:** Add a positive number to a negative number  
-**Screen heading:** `"The Big Question! 🌟"`
+**ID:** `boss`  
+**Pill:** `06 · BIG QUESTION`  
+**Title:** `Can you solve the Temperature Trap? 🐧`  
+**Screen text:** `It's −1°. It warms up 2°. What temperature now?`
 
----
+**Learning goal**
+- Solve a temperature-change problem using number line movement.
 
-#### Opening
+**Student action**
+- Type the final temperature.
 
-```
-[SCREEN TEXT]
-"It's −3° outside. Then it warms up 8°. How warm is it now? 🌡"
+**Correct answer**
+- `1°`
 
-[NOVA SPEAKS]
-"Okay, here's a big question — but you can do this!
- It starts at minus three degrees outside.
- Then the sun comes out and warms things up by eight degrees!
- So... where does the temperature end up?
- Imagine our penguin at minus three.
- He takes eight steps to the right.
- Minus three... then one... two... three... four... five... six... seven... eight steps!
- Where does he land?
- Try typing your answer in the box!"
-
-[VISUAL]  Number line −3 to +5 shown, input box
-[STUDENT DOES]  Types the answer
-```
+**Debrief**
+- `-1 + 2 = 1`.
 
 ---
 
-#### On wrong answer
+## Lesson 2: The Galaxy Code
 
-```
-[SCREEN TEXT]
-"Hmm, let's count together! 🤔"
+**Audience:** Grade 7  
+**Subject:** Algebra  
+**Core concept:** Coordinate geometry and linear equations  
+**Missions:** 7
 
-[NOVA SPEAKS]
-"Let me help!
- Let's count together.
- Start at minus three.
- Now take one step: minus TWO.
- Two steps: minus ONE.
- Three steps: ZERO!
- Four steps: ONE.
- Five steps: TWO.
- Six steps: THREE.
- Seven steps: FOUR.
- Eight steps: FIVE!
- So what's the answer?"
-```
+### Story Frame
+
+The student is a Navigator decoding a galaxy map. Nova acts like a friendly teacher or teacher's assistant. Each mission unlocks one part of straight-line navigation.
 
 ---
 
-#### On correct answer (5°)
+### Mission 1 — Coordinate System
 
-```
-[SCREEN TEXT]
-"5°! You solved the Temperature Trap! 🎊"
+**ID:** `coord`  
+**Pill:** `01 · COORDS`  
+**Title:** `Every star has a unique address.`  
+**Screen text:** `Let's find the two axes — the grid's number lines.`
 
-[NOVA SPEAKS]
-"FIVE! That's exactly right!
- Minus three plus eight equals FIVE!
- You started below zero and ended up ABOVE zero!
- You crossed the whole freezing line!
- You know what that means?
- You understand negative numbers now.
- Real scientists use this every single day.
- And today, YOU are a scientist!
- Give yourself a big hand — you were AMAZING!"
-```
+**Learning goal**
+- The X-axis goes sideways.
+- The Y-axis goes up and down.
+- A coordinate pair is read as `(x, y)`.
+- X comes first.
 
----
+**Learn steps**
+- Find the X-axis.
+- Find the Y-axis.
+- Identify what the first number means in `(5, 4)`.
 
-## Lesson 2: The Galaxy Code (Grade 2–3 Redesign)
+**Practice**
+- Dock at three coordinate targets:
+  - `(2, 6)`
+  - `(5, 3)`
+  - `(4, 7)`
 
-### IMPORTANT NOTE FOR REVIEW
-
-**Linear equations (y = mx + b) are NOT Grade 2–3 content.**
-
-For this age group, the Galaxy Code lesson should cover one of these instead:
-- **Option A:** Coordinate reading only (Missions 1 only, expanded to 5 scenes)
-- **Option B:** Skip counting and number patterns (2s, 5s, 10s) in a space setting
-- **Option C:** Simple addition and grouping (foundations of multiplication)
-
-**This proposal uses Option A** — coordinates only, expanded and deepened for Grade 2–3.
-
-**New lesson name:** "The Star Map"  
-**Topic:** Reading and plotting coordinates on a grid  
-**Why this works for Grade 2–3:** Finding addresses and locations on a map is intuitive for 7–9 year olds. It directly connects to maps, treasure hunts, and games they know.
+**Debrief**
+- Every point has a unique address.
 
 ---
 
-### New Story Frame
+### Mission 2 — Slope
 
-You're a Star Explorer! The Star Captain left behind a treasure map of the galaxy. Each star has a secret address — two numbers that tell you exactly where it is. Learn to read the addresses, and you'll find the hidden stars!
+**ID:** `slope`  
+**Pill:** `02 · SLOPE`  
+**Title:** `How steep is the hyperspace lane?`  
+**Screen text:** `Measure the lane's steepness — rise then run.`
 
-**Nova is:** The ship's friendly navigator robot
+**Learning goal**
+- Slope means steepness.
+- Slope is `rise ÷ run`.
+- Rise is vertical change.
+- Run is horizontal change.
 
-**Opening Nova speaks:**
-> "Hello, Explorer! Welcome to the Star Ship! I'm Nova — the navigator on this ship. Today we're going on a real treasure hunt! The galaxy is full of hidden stars, and each one has a secret address. Two numbers. That's it! Once you learn to read those two numbers, you can find any star in the whole universe! Ready to become a Star Explorer? Let's launch!"
+**Learn steps**
+- Find the rise from `(1,2)` to `(4,8)`.
+- Find the run.
+- Calculate slope `6 ÷ 3 = 2`.
 
-**Screen shows:** `"Welcome to the Star Ship! 🚀"`
+**Practice**
+- Calculate slope from `(1,2)` to `(3,8)`.
+- Correct answer: `3`.
 
----
-
-### Scene 1 · The Address Line (X-axis)
-
-**Learning goal:** The horizontal number line — X tells you how far RIGHT to go
-
----
-
-#### Step 1 — Introduce the sideways line
-
-```
-[SCREEN TEXT]
-"This line goes sideways. It has numbers. 👀"
-
-[NOVA SPEAKS]
-"Look at the star map.
- See that line going across the middle?
- Left... and right...
- That's called the X line.
- The numbers on it are like steps.
- If I say go to THREE on the X line,
- I mean take three steps to the right.
- Let's try it! Can you tap on the number THREE on the sideways line?"
-
-[VISUAL]  Grid with only x-axis visible and labeled. Other axis very faint.
-[STUDENT DOES]  Taps on number 3 on x-axis
-```
+**Debrief**
+- Steeper lines have bigger slope numbers.
 
 ---
 
-#### On correct tap
+### Mission 3 — Y-Intercept
 
-```
-[SCREEN TEXT]
-"That's 3 on the X line! ➡️"
+**ID:** `yint`  
+**Pill:** `03 · Y-INT`  
+**Title:** `Where does the lane enter the grid?`  
+**Screen text:** `Find the y-intercept — where the lane meets the Y-axis.`
 
-[NOVA SPEAKS]
-"Yes! You found three!
- Three steps to the right.
- That's how the X number works — it always tells you how far RIGHT to go!
- Easy, right?
- Now let's meet the OTHER number..."
-```
+**Learning goal**
+- The y-intercept is where a line crosses the Y-axis.
+- In `y = mx + b`, `b` is the y-intercept.
 
----
+**Learn steps**
+- Click where a line meets the Y-axis at height `3`.
+- Read the y-intercept in `y = 2x + 5`.
 
-### Scene 2 · The Up-Down Line (Y-axis)
+**Practice**
+- Choose which lane reaches station `y = 4`.
+- Lanes are visibly labeled `A`, `B`, and `C`.
+- Correct lane: `B`.
 
-**Learning goal:** The vertical number line — Y tells you how far UP to go
-
----
-
-#### Step 1
-
-```
-[SCREEN TEXT]
-"This line goes up and down. What do you notice? 🔍"
-
-[NOVA SPEAKS]
-"Now look at this line — it goes up and down!
- This one is called the Y line.
- The numbers on it tell you how many steps to go UP.
- If I say Y is FOUR,
- that means go up four steps!
- Can you tap on the number FOUR on the up-down line?"
-
-[VISUAL]  Grid with y-axis highlighted, x-axis faint
-[STUDENT DOES]  Taps on 4 on y-axis
-```
+**Debrief**
+- Y-intercept is the starting height.
 
 ---
 
-### Scene 3 · Finding a Star (Putting it together)
+### Mission 4 — Navigation Formula
 
-**Learning goal:** (x, y) as two numbers that make one address
+**ID:** `formula`  
+**Pill:** `04 · FORMULA`  
+**Title:** `y = mx + b: two numbers, any line.`  
+**Screen text:** `Unlock y = mx + b — the formula that describes every straight line.`
 
----
+**Learning goal**
+- `y = mx + b` describes a straight line.
+- `m` controls slope.
+- `b` controls y-intercept.
 
-#### Opening
+**Learn steps**
+- Identify what `m` controls.
+- Identify what `b` controls.
 
-```
-[SCREEN TEXT]
-"A star's address has TWO numbers. Like (3, 4). 🌟"
+**Practice**
+- Adjust sliders to match the target path.
+- Correct formula: `y = 2x + 1`.
 
-[NOVA SPEAKS]
-"Okay, here's the big secret of the star map!
- Every star has an address with TWO numbers.
- The FIRST number says how far to go RIGHT.
- The SECOND number says how far to go UP.
- So the address three, four means:
- Go three steps RIGHT... then four steps UP!
- Let me show you.
- Watch the ship move to star (3, 4)!"
-
-[VISUAL]  Animated ship moves 3 right, then 4 up, lands on glowing star
-```
+**Debrief**
+- Two numbers can describe a straight path.
 
 ---
 
-#### Now student tries
+### Mission 5 — Parallel Lanes
 
-```
-[SCREEN TEXT]
-"Find the star at (2, 5)! 🌟"
+**ID:** `parallel`  
+**Pill:** `05 · PARALLEL`  
+**Title:** `Same slope — but different paths?`  
+**Screen text:** `Discover what makes lines parallel.`
 
-[NOVA SPEAKS]
-"Now you try!
- There's a star hiding at address two, five.
- Remember — first number is steps to the RIGHT.
- Second number is steps UP.
- Two steps right... then five steps up!
- Tap where you think the star is!"
+**Learning goal**
+- Parallel lines never cross.
+- Parallel lines have the same slope.
+- They can have different y-intercepts.
 
-[VISUAL]  Clean grid, no markings. Student taps.
-[STUDENT DOES]  Taps on grid
-```
+**Learn step**
+- Answer what parallel lines must share.
 
----
+**Practice**
+- Original lane: `y = 3x + 2`.
+- Choose the parallel equation.
+- Correct answer: `y = 3x + 5`.
 
-#### On wrong tap
-
-```
-[SCREEN TEXT]
-"Hmm, let's try counting again! 🤔"
-
-[NOVA SPEAKS]
-"Almost! Let's count together.
- Start at the corner — that's where the two lines meet!
- First, go RIGHT — one, two! Stop there.
- Now go UP — one, two, three, four, five!
- That's where the star is hiding.
- Try tapping there!"
-```
+**Debrief**
+- Same slope, different y-intercept.
 
 ---
 
-#### On correct
+### Mission 6 — Equation From Two Points
 
-```
-[SCREEN TEXT]
-"You found it! Address (2, 5)! ⭐"
+**ID:** `twopts`  
+**Pill:** `06 · TWO POINTS`  
+**Title:** `Write the equation from just two stars.`  
+**Screen text:** `From two coordinates → slope → y-intercept → full equation.`
 
-[NOVA SPEAKS]
-"You found the star!
- Two steps right, five steps up — you nailed it!
- That star was hiding at address two, five,
- and YOU found it!
- You're a real Star Explorer now!
- Let's find a few more..."
-```
+**Learning goal**
+- Two points can define a line.
+- First find slope.
+- Then find `b`.
+- Then write `y = mx + b`.
 
----
+**Learn steps**
+- Use `(0,1)` and `(3,4)` to find slope `1`.
+- Use point `(0,1)` to find `b = 1`.
 
-### Scenes 4 & 5 · The Star Hunt
+**Practice**
+- Use `(1,3)` and `(3,7)`.
+- Correct slope: `2`.
+- Correct y-intercept: `1`.
+- Final equation: `y = 2x + 1`.
 
-Three hidden stars. Student must find each from the address alone. No markers, no hints on screen. Just the coordinate text and the grid.
-
-```
-Stars:  (4, 2)  →  (6, 5)  →  (3, 7)
-
-[SCREEN TEXT each round]
-Round 1: "Find the star at (4, 2) 🔭"
-Round 2: "Find the star at (6, 5) 🔭"  
-Round 3: "Find the star at (3, 7) 🔭"
-
-[NOVA SPEAKS each round]
-Round 1: "One more star to find! Address four, two. That's four to the right, two up! Where is it?"
-Round 2: "Oh, this one is trickier! Six to the right, five up. Take your time — I'm not going anywhere!"
-Round 3: "Last star! Three to the right, seven up. You've gotten SO good at this. I know you can find it!"
-```
+**Debrief**
+- Two points can produce a full equation.
 
 ---
 
-### Boss · The Secret Star
+### Mission 7 — Warp Gate
 
-```
-[SCREEN TEXT]
-"Where is the secret star? Address: (5, 6) 🌟"
+**ID:** `boss`  
+**Pill:** `07 · WARP GATE`  
+**Title:** `Calculate the warp trajectory!`  
+**Screen text:** `Does y = 2x + 2 pass through the Warp Gate at (3, 8)?`
 
-[NOVA SPEAKS]
-"This is it — the last hidden star in the whole galaxy!
- Its address is five, six.
- Five steps to the right.
- Six steps up.
- If you find this one...
- you've completed the whole Star Map!
- I believe in you, Explorer.
- Where is the secret star?"
+**Learning goal**
+- Build a line equation from slope and y-intercept.
+- Substitute an x-value.
+- Check whether a point lies on a line.
 
-[ON CORRECT]
-SCREEN: "You completed the Star Map! 🎉"
-NOVA: "YOU FOUND IT! The secret star at five, six!
-      You know what that means?
-      You learned to read star addresses today.
-      Any star in the whole galaxy has an address like this —
-      two numbers, right and up.
-      Explorers who know this are incredibly rare.
-      And today, you are one of them.
-      I'm so proud of you. You were AMAZING!"
-```
+**Student action**
+- Enter `m = 2`.
+- Enter `b = 2`.
+- Confirm whether `(3,8)` is on the line.
+
+**Correct reasoning**
+- `y = 2x + 2`
+- `y = 2(3) + 2`
+- `y = 8`
+- The path reaches `(3,8)`.
+
+**Debrief**
+- The student has used the full toolkit: coordinates, slope, y-intercept, formula, parallel lines, two-point equations, and verification.
 
 ---
 
-## Universal Patterns
+## Voice Layer
 
-### Hint sequence (all lessons, all scenes)
+### `/api/speak`
 
-```
-First wrong try:
-  [SCREEN]: "Let's look again together 🤔"
-  [NOVA]: Give a different angle on the problem. New analogy. Slower.
+Voice narration uses the OpenAI SDK with:
 
-Second wrong try:
-  [SCREEN]: "Here's a clue! 💡"
-  [NOVA]: Give a much more direct clue. Step-by-step counting. Animated helper if possible.
+- model: `gpt-4o-mini-tts`
+- voice: `alloy`
+- format: `mp3`
+- runtime: Node.js
 
-Third wrong try:
-  [SCREEN]: "Let's count it together! 🤝"
-  [NOVA]: Walk through it completely, step by step. Make it feel collaborative not remedial.
-```
+The API validates:
 
-### Celebration sequence (all correct answers)
+- `OPENAI_API_KEY`
+- JSON request body
+- non-empty text
 
-```
-[SCREEN]: Short, punchy, specific — name the thing they did
-[NOVA]: 
-  1. Celebrate what happened ("You crossed zero!")
-  2. Name what they learned ("That's a negative number!")
-  3. Connect it to real life ("Scientists use this every day!")
-  4. Build excitement for what's next ("And there's MORE...")
-```
+If the API fails, it returns safe JSON errors instead of crashing.
 
-### Between scenes
+### Browser Fallback
 
-```
-[SCREEN]: "[Next scene name] →"
-[NOVA]: Brief bridge that connects what they just learned to what's coming.
-  "You found the freezing point. But something even more interesting happens
-   when we go BELOW zero. Want to see?"
-```
+Both lesson pages try `/api/speak` first. If the API request, audio decoding, or playback fails, the app falls back to:
 
----
-
-## Implementation Notes
-
-### Text changes needed
-1. Every `tutorText` in scene definitions → reduce to 1 short line for screen display
-2. Every `intro` / `learnTexts` → split into `screenText` (1 line) and `spokenText` (full paragraph)
-3. Nova's fallback messages in `/app/api/tutor/route.js` → rewrite for Grade 2–3 vocabulary
-4. System prompt for OpenAI → rewrite Nova's character as Grade 2–3 tutor
-
-### TTS settings
 ```js
-// Change in both page.jsx and galaxy/page.jsx speak() function
-utt.rate  = 0.80;  // was 0.88 — notably slower for young listeners
-utt.pitch = 1.14;  // was 1.06 — warmer, slightly higher
+window.speechSynthesis
 ```
 
-### Screen bubble change
-The speech bubble should show `screenText` (short).  
-Nova speaks `spokenText` (full).  
-These are two different strings going forward.
-
-### What NOT to do
-- ❌ Don't put all of Nova's speech into the bubble text
-- ❌ Don't use vocabulary above Grade 3 reading level in screen text
-- ❌ Don't give more than one instruction at a time on screen
-- ❌ Don't move to the next beat before the current one resolves
+This keeps narration working even without OpenAI voice.
 
 ---
 
-*Review this document. Edit any scenes, dialogue, or vocabulary. When approved, reply "implement" and the code will be updated.*
+## Tutor API
+
+### `/api/tutor`
+
+The tutor API uses OpenAI chat completions with `gpt-4o-mini` when `OPENAI_API_KEY` is available.
+
+It supports:
+
+- hints
+- completion messages
+- transition messages
+- adaptive nudges
+- Raise Hand questions
+
+If OpenAI fails or is unavailable, local fallback responses are used.
+
+### Raise Hand Scope
+
+Temperature Raise Hand covers:
+
+- thermometers
+- hot and cold
+- zero
+- freezing point
+- negative numbers
+- minus sign
+- number line movement
+- adding by moving right
+
+Galaxy Raise Hand covers:
+
+- coordinates
+- X-axis and Y-axis
+- slope
+- rise and run
+- y-intercept
+- `y = mx + b`
+- parallel lines
+- equations from two points
+- checking whether a point is on a line
+
+Advanced but connected questions get a short preview. Off-topic questions are redirected back to the lesson.
+
+---
+
+## Layout Notes
+
+Both lessons use a two-column lesson layout on larger screens:
+
+- Nova/cat guide on the left.
+- Main interactive activity on the right.
+
+Short-height screens use compact height-based styling so the interaction remains usable.
+
+Known UI considerations:
+
+- Temperature Number Line choices stay in one row.
+- Galaxy y-intercept lane choices are labeled `A`, `B`, and `C`.
+- Bottom controls remain fixed.
+- Raise Hand floats at the bottom right.
+
+---
+
+## Deployment Notes
+
+Netlify uses a clean build command:
+
+```bash
+npm run netlify-build
+```
+
+That command removes `.next` before building:
+
+```bash
+rm -rf .next && next build
+```
+
+This prevents stale Next.js server chunks from being reused by a cached deploy.
+
